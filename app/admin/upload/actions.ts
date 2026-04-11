@@ -28,13 +28,16 @@ export async function uploadPhoto(formData: FormData) {
     .upload(storagePath, file)
   if (storageError) throw new Error(storageError.message)
 
-  // photos テーブルに INSERT
+  // photos テーブルに INSERT（失敗時は Storage のファイルを削除してロールバック）
   const { data: photo, error: insertError } = await supabase
     .from('photos')
     .insert({ title, description: null, storage_path: storagePath, category: category || null })
     .select('id')
     .single()
-  if (insertError || !photo) throw new Error(insertError?.message ?? 'Insert failed')
+  if (insertError || !photo) {
+    await supabase.storage.from('photos').remove([storagePath])
+    throw new Error(insertError?.message ?? 'Insert failed')
+  }
 
   // 新規タグを作成
   const allTagIds = [...tagIds]

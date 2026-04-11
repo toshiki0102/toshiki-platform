@@ -4,10 +4,16 @@ import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = { title: 'Login' }
 
-export default async function LoginPage() {
+type Props = {
+  searchParams: Promise<{ error?: string }>
+}
+
+export default async function LoginPage({ searchParams }: Props) {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
   if (data) redirect('/admin')
+
+  const { error } = await searchParams
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -25,6 +31,12 @@ export default async function LoginPage() {
               Googleアカウントで認証してください
             </p>
           </div>
+
+          {error && (
+            <p className="text-xs text-red-400 tracking-wide">
+              ログインに失敗しました。再度お試しください。
+            </p>
+          )}
 
           <form action="/auth/google" method="POST">
             <button

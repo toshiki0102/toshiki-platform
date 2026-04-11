@@ -12,7 +12,8 @@ type Props = {
 export default async function GalleryPage({ searchParams }: Props) {
   const { tag } = await searchParams
   const supabase = await createClient()
-  const { data: tags } = await supabase.from('tags').select('id, name').order('name')
+  const { data: tags, error: tagsError } = await supabase.from('tags').select('id, name').order('name')
+  if (tagsError) console.error('Failed to fetch tags:', tagsError.message)
 
   return (
     <div className="flex flex-col min-h-screen">
