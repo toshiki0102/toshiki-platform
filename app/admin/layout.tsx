@@ -11,6 +11,9 @@ export default async function AdminLayout({
   const { data, error } = await supabase.auth.getClaims()
   if (error || !data) redirect('/login')
 
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail || data.claims.email !== adminEmail) redirect('/login')
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="flex items-center justify-between border-b border-[#1f1f1f] px-6 py-4 md:px-10">

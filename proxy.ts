@@ -30,17 +30,28 @@ export async function proxy(request: NextRequest) {
 
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
 
-  if (isAdminRoute && (error || !data)) {
+  if (isAdminRoute) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
-    return NextResponse.redirect(loginUrl)
+
+    // 未認証
+    if (error || !data) return NextResponse.redirect(loginUrl)
+
+    // 認証済みでも許可メール以外はアクセス拒否
+    const adminEmail = process.env.ADMIN_EMAIL
+    if (!adminEmail || data.claims.email !== adminEmail) {
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
-  // ログイン済みユーザーが /login にアクセスした場合は /admin にリダイレクト
+  // ログイン済み管理者が /login にアクセスした場合は /admin にリダイレクト
   if (request.nextUrl.pathname === '/login' && data && !error) {
-    const adminUrl = request.nextUrl.clone()
-    adminUrl.pathname = '/admin'
-    return NextResponse.redirect(adminUrl)
+    const adminEmail = process.env.ADMIN_EMAIL
+    if (adminEmail && data.claims.email === adminEmail) {
+      const adminUrl = request.nextUrl.clone()
+      adminUrl.pathname = '/admin'
+      return NextResponse.redirect(adminUrl)
+    }
   }
 
   return response
