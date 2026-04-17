@@ -47,7 +47,10 @@ export async function uploadPhoto(formData: FormData) {
   const { error: storageError } = await supabase.storage
     .from('photos')
     .upload(storagePath, file)
-  if (storageError) throw new Error(storageError.message)
+  if (storageError) {
+    console.error('[uploadPhoto] storage error:', storageError)
+    throw new Error('ファイルのアップロードに失敗しました')
+  }
 
   // photos テーブルに INSERT（失敗時は Storage のファイルを削除してロールバック）
   const { data: photo, error: insertError } = await supabase
@@ -57,7 +60,8 @@ export async function uploadPhoto(formData: FormData) {
     .single()
   if (insertError || !photo) {
     await supabase.storage.from('photos').remove([storagePath])
-    throw new Error(insertError?.message ?? 'Insert failed')
+    console.error('[uploadPhoto] insert error:', insertError)
+    throw new Error('写真の登録に失敗しました')
   }
 
   // 新規タグを作成

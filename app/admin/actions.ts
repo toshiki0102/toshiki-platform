@@ -10,18 +10,27 @@ export async function deletePhoto(photoId: string, storagePath: string) {
   const { data, error: authError } = await supabase.auth.getClaims()
   if (authError || !data) throw new Error('Unauthorized')
 
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail || data.claims.email !== adminEmail) throw new Error('Unauthorized')
+
   // Storage からファイルを削除
   const { error: storageError } = await supabase.storage
     .from('photos')
     .remove([storagePath])
-  if (storageError) throw new Error(storageError.message)
+  if (storageError) {
+    console.error('[deletePhoto] storage error:', storageError)
+    throw new Error('ファイルの削除に失敗しました')
+  }
 
   // DB からレコードを削除（photo_tags は cascade で自動削除）
   const { error: dbError } = await supabase
     .from('photos')
     .delete()
     .eq('id', photoId)
-  if (dbError) throw new Error(dbError.message)
+  if (dbError) {
+    console.error('[deletePhoto] db error:', dbError)
+    throw new Error('写真の削除に失敗しました')
+  }
 
   revalidatePath('/')
   revalidatePath('/admin')

@@ -11,10 +11,11 @@ type Props = {
 export default function DeleteButton({ photoId, storagePath }: Props) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
 
-  const handleClick = () => {
-    if (!confirm('この写真を削除しますか？')) return
+  const handleDelete = () => {
     setError(null)
+    setConfirming(false)
     startTransition(async () => {
       try {
         await deletePhoto(photoId, storagePath)
@@ -24,10 +25,32 @@ export default function DeleteButton({ photoId, storagePath }: Props) {
     })
   }
 
+  if (confirming) {
+    return (
+      <div className="flex flex-col items-start gap-1">
+        <p className="text-[10px] text-[#a0a0a0] tracking-wide">削除しますか？</p>
+        <div className="flex gap-3">
+          <button
+            onClick={handleDelete}
+            className="text-[10px] tracking-[0.15em] uppercase text-red-400 hover:text-red-300 transition-colors duration-200"
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => setConfirming(false)}
+            className="text-[10px] tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#a0a0a0] transition-colors duration-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-start gap-1">
       <button
-        onClick={handleClick}
+        onClick={() => setConfirming(true)}
         disabled={isPending}
         className="text-[10px] tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-red-400 transition-colors duration-200 disabled:opacity-40"
       >

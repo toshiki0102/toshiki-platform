@@ -8,20 +8,19 @@ type Props = {
 export default async function GalleryGrid({ tagId }: Props) {
   const supabase = await createClient()
 
-  const query = supabase
-    .from('photos')
-    .select('*, photo_tags(tags(id, name))')
-    .order('created_at', { ascending: false })
-
-  // タグ絞り込み: photo_tags に該当 tag_id を持つ写真のみ取得
+  // タグ絞り込み: !inner join で DB レベルでフィルタリング
   const { data: photos } = tagId
-    ? await query.eq('photo_tags.tag_id', tagId)
-    : await query
+    ? await supabase
+        .from('photos')
+        .select('*, photo_tags!inner(tags(id, name))')
+        .eq('photo_tags.tag_id', tagId)
+        .order('created_at', { ascending: false })
+    : await supabase
+        .from('photos')
+        .select('*, photo_tags(tags(id, name))')
+        .order('created_at', { ascending: false })
 
-  // タグ絞り込み時は photo_tags が空配列でないものだけ表示
-  const filtered = tagId
-    ? (photos ?? []).filter((p) => p.photo_tags && p.photo_tags.length > 0)
-    : (photos ?? [])
+  const filtered = photos ?? []
 
   if (filtered.length === 0) {
     return (

@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# MCP設定（アクセストークンを含む可能性があるため除外）
+.mcp.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.claude/
