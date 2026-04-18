@@ -22,6 +22,7 @@ export default function DeleteButton({ photoId, storagePath }: Props) {
       } catch (err) {
         setError(err instanceof Error ? err.message : '削除に失敗しました')
       }
+      
     })
   }
 
