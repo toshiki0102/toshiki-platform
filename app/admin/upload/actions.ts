@@ -87,9 +87,13 @@ export async function uploadPhoto(formData: FormData) {
 
   // photo_tags に INSERT
   if (allTagIds.length > 0) {
-    await supabase
+    const { error: tagsError } = await supabase
       .from('photo_tags')
       .insert(allTagIds.map((tagId) => ({ photo_id: photo.id, tag_id: tagId })))
+    if (tagsError) {
+      console.error('[uploadPhoto] tags insert error:', tagsError)
+      throw new Error('タグの関連付けに失敗しました')
+    }
   }
 
   revalidatePath('/')
